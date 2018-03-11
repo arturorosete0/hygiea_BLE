@@ -108,14 +108,14 @@ void setup()
   }
     /* Add the Elevation characteristic */
     Serial.println(F("Adding the Elevation characteristic(UUID=0x2A6C): "));
-    success = ble.sendCommandWithIntReply( F("AT+GATTADDCHAR=UUID=0x2A6C"), &elevation_CharID);
+    success = ble.sendCommandWithIntReply( F("AT+GATTADDCHAR=UUID=0x2A6C,PROPERTIES=0x02,MIN_LEN=1"), &elevation_CharID);
     if (! success) {
       error(F("Could not add Elevation characteristic"));
     }
 
     /* Add the Temperature characteristic */
     Serial.println(F("Adding the Temperature characteristic(UUID=0x2A6E): "));
-    success = ble.sendCommandWithIntReply( F("AT+GATTADDCHAR=UUID=0x2A6E"), &temp_CharID);
+    success = ble.sendCommandWithIntReply( F("AT+GATTADDCHAR=UUID=0x2A6E, PROPERTIES=0x02,MIN_LEN=1"), &temp_CharID);
     if (! success) {
       error(F("Could not add Temperature characteristic"));
     }
@@ -128,7 +128,7 @@ void setup()
   }
     /* Add the Link Loss Alert Level characteristic */
     Serial.println(F("Adding the Link Loss Alert Level characteristic(UUID=0x2A06): "));
-    success = ble.sendCommandWithIntReply( F("AT+GATTADDCHAR=UUID=0x2A06,VALUE=0"), &ll_AlertLevel_CharID);
+    success = ble.sendCommandWithIntReply( F("AT+GATTADDCHAR=UUID=0x2A06,PROPERTIES=0x04,MIN_LEN=1,VALUE=0"), &ll_AlertLevel_CharID);
     if (! success) {
       error(F("Could not add Link Loss Alert Level characteristic"));
     }
@@ -144,13 +144,13 @@ void loop()
 
   /* Command is sent when \n (\r) or println is called */
   /* AT+GATTCHAR=CharacteristicID,value */
-  
+  /*
   int battery_level = random(15, 100);
   ble.print(F("AT+GATTCHAR="));
   ble.print(battCharId);
   ble.print(F(",00-"));
   ble.println(battery_level, HEX);
-   
+  */
   /*
   ble.print(F("AT+GATTCHAR="));
   ble.print(alertLCharId);
