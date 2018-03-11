@@ -1,3 +1,4 @@
+#include <SimpleTimer.h>
 #include <Arduino.h>
 #include <SPI.h>
 #include "Adafruit_BLE.h"
@@ -18,6 +19,7 @@ void error(const __FlashStringHelper*err) {
   Serial.println(err);
   while (1);
 }
+SimpleTimer timer;
 
 /* The service information */
 //For Generic Access (0x1800);
@@ -42,11 +44,27 @@ int32_t linkLoss_ServiceID;
 int32_t ll_AlertLevel_CharID;
 
 int alert_level;
+int battery_level = 0;
+
+void repeatMe(){
+  battery_level ++;
+  ble.print(F("AT+GATTCHAR="));
+  ble.print(battCharId);
+  ble.print(F(",00-"));
+  ble.println(battery_level, HEX);
+  if ( !ble.waitForOK() )
+    {
+      Serial.println(F("Failed to get response!"));
+    }
+}
 
 void setup()
 {
   boolean success;
   Serial.begin(115200);
+  
+  timer.setInterval(5000,repeatMe);
+
   Wire.begin(5);
   Wire.onReceive(receiveEvent);
   randomSeed(micros());
@@ -133,31 +151,14 @@ void setup()
       error(F("Could not add Link Loss Alert Level characteristic"));
     }
 
-  /* Reset the device for the new service setting changes to take effect */
+  /* Reset the device for new the service setting changes to take effect */
   ble.reset();
   Serial.println(F("Setup finished."));
 }
 
 void loop()
 {
-  //Random battery_level for testing
-
-  /* Command is sent when \n (\r) or println is called */
-  /* AT+GATTCHAR=CharacteristicID,value */
-  /*
-  int battery_level = random(15, 100);
-  ble.print(F("AT+GATTCHAR="));
-  ble.print(battCharId);
-  ble.print(F(",00-"));
-  ble.println(battery_level, HEX);
-  */
-  /*
-  ble.print(F("AT+GATTCHAR="));
-  ble.print(alertLCharId);
-  ble.print(F(",00-"));
-  ble.println(alert_level, HEX);
-  */
-  
+  timer.run();  
 }
 
 void receiveEvent(int howMany)
