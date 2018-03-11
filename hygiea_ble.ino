@@ -20,10 +20,9 @@ void error(const __FlashStringHelper*err) {
 }
 
 /* The service information */
-//For Heart Rate (0x180D)
-int32_t hrmServiceId;
-int32_t hrmMeasureCharId;
-int32_t hrmLocationCharId;
+//For Generic Access (0x1800);
+int32_t gA_ServiceID;
+int32_t appearance_CharID;
 
 //For User Data (0x180F)
 int32_t battServiceId;
@@ -33,10 +32,19 @@ int32_t battCharId;
 int32_t iAServiceId;
 int32_t alertLCharId;
 
-//int heart_rate;
-int alert_level = 200;
+//For Enviromental Sensing (0x181A)
+int32_t envSensing_ServiceID;
+int32_t elevation_CharID;
+int32_t temp_CharID;
 
-void setup(void)
+//For Link Loss (0x1803)
+int32_t linkLoss_ServiceID;
+int32_t ll_AlertLevel_CharID;
+
+//int heart_rate;
+//int alert_level = 200;
+
+void setup()
 {
   boolean success;
   Serial.begin(115200);
@@ -65,27 +73,18 @@ void setup(void)
     error(F("Could not set device name?"));
   }
 
-  /* Add the Heart Rate Service definition */
-  /* Service ID should be 1 */
-  //Serial.println(F("Adding the Heart Rate Service definition (UUID = 0x180D): "));
-  //success = ble.sendCommandWithIntReply( F("AT+GATTADDSERVICE=UUID=0x180D"), &hrmServiceId);
-  //if (! success) {
-  //  error(F("Could not add HRM service"));
-  //}
-  /* Add the Heart Rate Measurement characteristic */
-  /* Chars ID for Measurement should be 1 */
-  //Serial.println(F("Adding the Heart Rate Measurement characteristic (UUID = 0x2A37): "));
-  //success = ble.sendCommandWithIntReply( F("AT+GATTADDCHAR=UUID=0x2A37, PROPERTIES=0x10, MIN_LEN=2, MAX_LEN=3, VALUE=00-70"), &hrmMeasureCharId);
-  //    if (! success) {
-    //error(F("Could not add HRM characteristic"));
-  //}
-  /* Add the Body Sensor Location characteristic */
-  /* Chars ID for Body should be 2 */
-  //Serial.println(F("Adding the Body Sensor Location characteristic (UUID = 0x2A38): "));
-  //success = ble.sendCommandWithIntReply( F("AT+GATTADDCHAR=UUID=0x2A38, PROPERTIES=0x02, MIN_LEN=1, VALUE=3"), &hrmLocationCharId);
-  //    if (! success) {
-    //error(F("Could not add BSL characteristic"));
-  //}
+  /* Add the Generic Access Service definition */
+  Serial.println(F("Adding the Generic Access Service definition (UUID = 0x1800): "));
+  success = ble.sendCommandWithIntReply( F("AT+GATTADDSERVICE=UUID=0x1800"), &gA_ServiceID);
+  if (! success) {
+    error(F("Could not add Generic Access service"));
+  }
+    /* Add the Appearance characteristic */
+    Serial.println(F("Adding the Appearance characteristic (UUID = 0x2A01): "));
+    success = ble.sendCommandWithIntReply( F("AT+GATTADDCHAR=UUID=0x2A01,VALUE=192"), &appearance_CharID);
+    if (! success) {
+      error(F("Could not add Appearance characteristic"));
+    }
 
   /* Add User Battery level service definition */
   Serial.println(F("Adding the Battery Level Service definition (UUID = 0x180F): "));
@@ -115,23 +114,54 @@ void setup(void)
       error(F("Could not add Alert Level characteristic"));
     }
 
+  /* Add the Enviromental Sensing Service definition */
+  Serial.println(F("Adding the Enviromental Sensing Service definition (UUID = 0x181A): "));
+  success = ble.sendCommandWithIntReply( F("AT+GATTADDSERVICE=UUID=0x181A"), &envSensing_ServiceID);
+  if (! success) {
+    error(F("Could not add Enviromental Sensing service"));
+  }
+    /* Add the Elevation characteristic */
+    Serial.println(F("Adding the Elevation characteristic (UUID = 0x2A6C): "));
+    success = ble.sendCommandWithIntReply( F("AT+GATTADDCHAR=UUID=0x2A6C"), &elevation_CharID);
+    if (! success) {
+      error(F("Could not add Elevation characteristic"));
+    }
+
+    /* Add the Temperature characteristic */
+    Serial.println(F("Adding the Temperature characteristic (UUID = 0x2A6E): "));
+    success = ble.sendCommandWithIntReply( F("AT+GATTADDCHAR=UUID=0x2A6E"), &temp_CharID);
+    if (! success) {
+      error(F("Could not add Temperature characteristic"));
+    }
+
+  /* Add the Link Loss Service definition */
+  Serial.println(F("Adding the Link Loss Service definition (UUID = 0x1803): "));
+  success = ble.sendCommandWithIntReply( F("AT+GATTADDSERVICE=UUID=0x1803"), &linkLoss_ServiceID);
+  if (! success) {
+    error(F("Could not add Link Loss service"));
+  }
+    /* Add the Link Loss Alert Level characteristic */
+    Serial.println(F("Adding the Link Loss Alert Level characteristic (UUID = 0x2A06): "));
+    success = ble.sendCommandWithIntReply( F("AT+GATTADDCHAR=UUID=0x2A06"), &ll_AlertLevel_CharID);
+    if (! success) {
+      error(F("Could not add Link Loss Alert Level characteristic"));
+    }
+
   /* Reset the device for the new service setting changes to take effect */
   ble.reset();
 
-  ble.print( F("AT+GATTCHAR=") );
+/*  ble.print( F("AT+GATTCHAR=") );
   ble.print( hrmMeasureCharId);
   ble.print( F(",00-") );
-  ble.println(alert_level, HEX);
+  ble.println(alert_level, HEX);*/
   /* Check if command executed OK */
     if ( !ble.waitForOK() )
       {
         Serial.println(F("Failed to get response!"));
       }
-    
-    delay(100);
 }
 
-void loop(void)
+void loop()
 {
   /** Send randomized heart rate data continuously **/
   //int battery_level = random(15, 100);
@@ -156,7 +186,7 @@ void loop(void)
 }
 
 void receiveEvent(int howMany)
-{
+{/*
   alert_level = Wire.read();
   ble.print( F("AT+GATTCHAR=") );
   ble.print( hrmMeasureCharId);
@@ -167,5 +197,5 @@ void receiveEvent(int howMany)
   if ( !ble.waitForOK() )
     {
       Serial.println(F("Failed to get response!"));
-    }
+    }*/
 }
