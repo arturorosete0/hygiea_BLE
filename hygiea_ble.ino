@@ -45,9 +45,13 @@ int32_t ll_AlertLevel_CharID;
 
 int alert_level;
 int battery_level = 0;
+int data_in[3]; //Batt_level,
+int elevation, temperature;
+int id, update_id;
+bool current_version, last_version;
 
 void repeatMe(){
-  battery_level ++;
+  /*battery_level ++;
   ble.print(F("AT+GATTCHAR="));
   ble.print(battCharId);
   ble.print(F(",00-"));
@@ -55,7 +59,7 @@ void repeatMe(){
   if ( !ble.waitForOK() )
     {
       Serial.println(F("Failed to get response!"));
-    }
+    }*/
 }
 
 void setup()
@@ -153,23 +157,70 @@ void setup()
 
   /* Reset the device for new the service setting changes to take effect */
   ble.reset();
-  Serial.println(F("Setup finished."));
+  Serial.println("Setup finished.");
+  delay(3000);
 }
 
 void loop()
 {
   timer.run();  
+  if(current_version != last_version){
+    last_version = current_version;
+    update_ble(update_id, data_in[id]);    
+  }
 }
 
 void receiveEvent(int howMany)
 {
-  alert_level = Wire.read();
+  int x = Wire.available();
+  int prev_data[] = {battery_level, alert_level, elevation, temperature};
+  for(int i=0; i<x; i++){
+      data_in[i] = Wire.read();    
+  }
+  id =diff_array(prev_data, data_in);
+  if(id != 6){
+    current_version = !current_version;
+    switch (id) {
+        case 0:
+          update_id = battCharId;
+          break;
+        case 1:
+          update_id = alertLCharId;
+          break;
+        case 2:
+          update_id = elevation_CharID;
+          break;
+        case 3:
+          update_id = temp_CharID;
+          break;
+        case 6:
+          Serial.println("Error: Diferente longitud.");
+          break;
+    }
+  }
+}
+
+int diff_array(int *a, int *b){
+  int n;
+  //test length difference
+  if(sizeof(a)!=sizeof(b)){
+    Serial.println(F("Not same length."));
+    return 5;
+  }
+  //test each element to be the same. If not, return false
+  for(n=0; n<sizeof(a);n++){
+      if(a[n]!=b[n]){
+          return a[n];
+      }
+  }
+  return 6;
+}
+
+void update_ble(int char_id, int value){
   ble.print( F("AT+GATTCHAR=") );
-  ble.print( alertLCharId);
+  ble.print( char_id);
   ble.print( F(",00-") );
-  ble.println(alert_level, HEX);
-  Serial.print("Valor: "); Serial.println(alert_level);
-    
+  ble.println(value, HEX);
   if ( !ble.waitForOK() )
     {
       Serial.println(F("Failed to get response!"));
