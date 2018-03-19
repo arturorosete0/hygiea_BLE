@@ -162,7 +162,7 @@ void repeatMe(){
   void receiveEvent(int howMany)
   {
     int x = Wire.available();
-    Serial.print("Wire available");
+    Serial.print("Wire available:  ");
     Serial.println(x);
     int prev_data[] = {battery_level, alert_level, elevation, temperature};
     for(int i=0; i<x; i++){
