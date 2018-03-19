@@ -65,7 +65,7 @@ void repeatMe(){
     void setup()
     {
       boolean success;
-      Serial.begin(115200);
+      Serial.begin(9600);
 
       timer.setInterval(5000,repeatMe);
 
@@ -78,37 +78,30 @@ void repeatMe(){
       {
         error(F("Couldn't find Bluefruit, make sure it's in CoMmanD mode & check wiring?"));
       }
-
   /* Perform a factory reset to make sure everything is in a known state */
       if (! ble.factoryReset() ){
        error(F("Couldn't factory reset"));
      }
-
   /* Disable command echo from Bluefruit */
      ble.echo(false);
   /* Print Bluefruit information */
      ble.info();
-
   /* Change the device name to make it easier to find */
      if (! ble.sendCommandCheckOK(F("AT+GAPDEVNAME=Hygiea")) ) {
       error(F("Could not set device name?"));
     }
-
   /* Add User Battery level service definition */
     Serial.println(F("Adding the Battery Level Service definition(UUID=0x180F): "));
     success = ble.sendCommandWithIntReply(F("AT+GATTADDSERVICE=UUID=0x180F"), &battServiceId); 
     if (! success){
       error(F("Could not add User Data service"));
     }
-
     /* Add battery level characteristic */
     Serial.println(F("Adding the Battery Level characteristic(UUID=0x2A19): "));
     success = ble.sendCommandWithIntReply(F("AT+GATTADDCHAR=UUID=0x2A19, PROPERTIES=0x10, MIN_LEN=1, VALUE=100"), &battCharId);
     if (! success) {
       error(F("Could not add Battery Level characteristic"));
     }
-
-
   /* Add the Immediate Alert Service definition */
     Serial.println(F("Adding the Immediate Alert Service definition(UUID=0x1802): "));
     success = ble.sendCommandWithIntReply( F("AT+GATTADDSERVICE=UUID=0x1802"), &iAServiceId);
@@ -121,7 +114,6 @@ void repeatMe(){
     if (! success) {
       error(F("Could not add Alert Level characteristic"));
     }
-
   /* Add the Enviromental Sensing Service definition */
     Serial.println(F("Adding the Enviromental Sensing Service definition(UUID=0x181A): "));
     success = ble.sendCommandWithIntReply( F("AT+GATTADDSERVICE=UUID=0x181A"), &envSensing_ServiceID);
@@ -134,14 +126,12 @@ void repeatMe(){
     if (! success) {
       error(F("Could not add Elevation characteristic"));
     }
-
     /* Add the Temperature characteristic */
     Serial.println(F("Adding the Temperature characteristic(UUID=0x2A6E): "));
     success = ble.sendCommandWithIntReply( F("AT+GATTADDCHAR=UUID=0x2A6E, PROPERTIES=0x02,MIN_LEN=1"), &temp_CharID);
     if (! success) {
       error(F("Could not add Temperature characteristic"));
     }
-
   /* Add the Link Loss Service definition */
     Serial.println(F("Adding the Link Loss Service definition(UUID=0x1803): "));
     success = ble.sendCommandWithIntReply( F("AT+GATTADDSERVICE=UUID=0x1803"), &linkLoss_ServiceID);
@@ -154,7 +144,6 @@ void repeatMe(){
     if (! success) {
       error(F("Could not add Link Loss Alert Level characteristic"));
     }
-
   /* Reset the device for new the service setting changes to take effect */
     ble.reset();
     Serial.println("Setup finished.");
@@ -163,7 +152,7 @@ void repeatMe(){
 
   void loop()
   {
-    timer.run();  
+    timer.run();      
     if(current_version != last_version){
       last_version = current_version;
       update_ble(update_id, data_in[id]);
@@ -172,8 +161,9 @@ void repeatMe(){
 
   void receiveEvent(int howMany)
   {
-    Serial.println("Fired!");
     int x = Wire.available();
+    Serial.print("Wire available");
+    Serial.println(x);
     int prev_data[] = {battery_level, alert_level, elevation, temperature};
     for(int i=0; i<x; i++){
       data_in[i] = Wire.read();    
@@ -205,14 +195,13 @@ void repeatMe(){
     }
   }
 
+  /* Return 5 if the arrays aren't the same lenght; 6 if are equal; return a[n] when found a diff btw the 2 arrays. */
   int diff_array(int *a, int *b){
     int n;
-  //test length difference
     if(sizeof(a)!=sizeof(b)){
       Serial.println(F("Not same length."));
       return 5;
-    }
-  //test each element to be the same. If not, return false
+    } 
     for(n=sizeof(b); n>0;n--){
       if(a[n]!= b[n]){
         return a[n];
