@@ -204,7 +204,7 @@ void repeatMe(){
     } 
     for(n=sizeof(b); n>0;n--){
       if(a[n]!= b[n]){
-        return a[n];
+        return n;
       }
     }
     return 6;
