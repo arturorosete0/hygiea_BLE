@@ -14,12 +14,7 @@
 /* ...hardware SPI, using SCK/MOSI/MISO hardware SPI pins and then user selected CS/IRQ/RST */
 Adafruit_BluefruitLE_SPI ble(BLUEFRUIT_SPI_CS, BLUEFRUIT_SPI_IRQ, BLUEFRUIT_SPI_RST);
 
-//Catch the errors
-void error(const __FlashStringHelper*err) {
-  Serial.println(err);
-  while (1);
-}
-SimpleTimer timer;
+SimpleTimer timer; //Timer para ejecutar funciones en cierto tiempo
 
 /* The service information */
 //For Generic Access (0x1800);
@@ -43,15 +38,19 @@ int32_t temp_CharID;
 int32_t linkLoss_ServiceID;
 int32_t ll_AlertLevel_CharID;
 
-int alert_level;
-int battery_level = 0;
-int data_in[3]; //Batt_level,
-int elevation, temperature;
+int battery_level, alert_level, elevation, temperature;
+int data_in[4]; //battery_level, alert_level, elevation, temperature
 int id, update_id;
 bool current_version, last_version;
 
+//Catch the errors
+void error(const __FlashStringHelper*err) {
+  Serial.println(err);
+  while (1);
+}
+/*
 void repeatMe(){
-  /*battery_level ++;
+  battery_level ++;
   ble.print(F("AT+GATTCHAR="));
   ble.print(battCharId);
   ble.print(F(",00-"));
@@ -59,19 +58,19 @@ void repeatMe(){
   if ( !ble.waitForOK() )
     {
       Serial.println(F("Failed to get response!"));
-    }*/
     }
+}*/
 
     void setup()
     {
       boolean success;
       Serial.begin(9600);
 
-      timer.setInterval(5000,repeatMe);
+      //timer.setInterval(5000,repeatMe);
 
       Wire.begin(5);
       Wire.onReceive(receiveEvent);
-      randomSeed(micros());
+      //randomSeed(micros());
 
   /* Initialise the module */
       if ( !ble.begin(VERBOSE_MODE) )
@@ -162,13 +161,24 @@ void repeatMe(){
   void receiveEvent(int howMany)
   {
     int x = Wire.available();
+    char test;
     Serial.print("Wire available:  ");
     Serial.println(x);
     int prev_data[] = {battery_level, alert_level, elevation, temperature};
+    
     for(int i=0; i<x; i++){
-      data_in[i] = Wire.read();    
+      test = Wire.read();
+      data_in[i] = (int)test;
     }
+
+    Serial.println("Los datos que llegaron:  ");
+    for (int i = 0; i < 3; i++)
+    {
+      Serial.println(data_in[i]);
+    }
+
     id =diff_array(prev_data, data_in);
+    Serial.print("id es: "); Serial.println(id);
     if(id != 6){
       current_version = !current_version;
       switch (id) {
@@ -188,7 +198,7 @@ void repeatMe(){
         Serial.println("temperatura actualizada.");
         update_id = temp_CharID;
         break;
-        case 6:
+        case 5:
         Serial.println("Error: Diferente longitud.");
         break;
       }
@@ -198,12 +208,12 @@ void repeatMe(){
   /* Return 5 if the arrays aren't the same lenght; 6 if are equal; return a[n] when found a diff btw the 2 arrays. */
   int diff_array(int *a, int *b){
     int n;
-    if(sizeof(a)!=sizeof(b)){
+    if( sizeof(a) != sizeof(b) ){
       Serial.println(F("Not same length."));
       return 5;
     } 
-    for(n=sizeof(b); n>0;n--){
-      if(a[n]!= b[n]){
+    for(n= 0; n<3;n++){
+      if(a[n] != b[n]){
         return n;
       }
     }
