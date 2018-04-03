@@ -65,10 +65,11 @@ bool success;
 void setup()
 {
   Serial.begin(115200);
+  ble_setup();
+  timer.setInterval(5000,repeatMe);
   Wire.begin(5);
   Wire.onReceive(receiveEvent);
-  timer.setInterval(5000,repeatMe);
-  ble_setup();
+  Wire.onRequest(requestEvent);
   /* Wait for connection */
   /*while (! ble.isConnected()) {
     delay(500);
@@ -85,6 +86,29 @@ void setup()
 
   //ble.print(F("AT+GATTCHAR=6,")); ble.println(measurementCharID);
   }
+
+  bool gattUpdate(){
+    bool chance;
+    int32_t response;
+    chance = ble.sendCommandWithIntReply(F("AT+GATTCHAR=6"), &response); 
+    if (! chance){
+      error(F("Try again."));
+    }
+    if(response == 10){
+      return true; 
+    }
+    return false;
+  }
+
+  void requestEvent(){
+    char data[2];
+    if(gattUpdate()){
+      data[0] = 1;
+      data[1] = 2;
+    }
+    Wire.write(data,2);
+  }
+
 
   void receiveEvent(int howMany)
   {
@@ -193,25 +217,25 @@ void ble_setup(){
     0x20 - Indicate
 */
   /* Initialise the module */
-  if ( !ble.begin(VERBOSE_MODE) )
-  {
-    error(F("Couldn't find Bluefruit, make sure it's in CoMmanD mode & check wiring?"));
-  }
+    if ( !ble.begin(VERBOSE_MODE) )
+    {
+      error(F("Couldn't find Bluefruit, make sure it's in CoMmanD mode & check wiring?"));
+    }
   /* Perform a factory reset to make sure everything is in a known state */
-  if (! ble.factoryReset() ){
-    error(F("Couldn't factory reset"));
-  }
+    if (! ble.factoryReset() ){
+      error(F("Couldn't factory reset"));
+    }
   /* Disable command echo from Bluefruit */
-  ble.echo(false);
+    ble.echo(false);
   /* Print Bluefruit information */
   //ble.info();
-  ble.update(250);
-  
+  //ble.update(250);
+
   /* Change the device name to make it easier to find */
-  if (! ble.sendCommandCheckOK(F("AT+GAPDEVNAME=Pixky_SS18")) ) {
-    error(F("Could not set device name?"));
-  }
-  
+    if (! ble.sendCommandCheckOK(F("AT+GAPDEVNAME=Pixky_SS18")) ) {
+      error(F("Could not set device name?"));
+    }
+
   /* Add Generic Access service definition */
   /*Serial.println(F("Adding the Generic Access Service definition(UUID=0x1800): "));
   success = ble.sendCommandWithIntReply(F("AT+GATTADDSERVICE=UUID=0x1800"), &gaServiceID); 
@@ -271,15 +295,12 @@ void ble_setup(){
       error(F("Could not add Temperature characteristic"));
     }
 
-    
-
-
   /* Add CUSTOM service definition */
-  Serial.println(F("Adding CUSTOM Service definition(UUID=0x0001): "));
-  success = ble.sendCommandWithIntReply(F("AT+GATTADDSERVICE=UUID=0x0001"), &customServiceID); 
-  if (! success){
-    error(F("Could not add CUSTOM service"));
-  }
+    Serial.println(F("Adding CUSTOM Service definition(UUID=0x0001): "));
+    success = ble.sendCommandWithIntReply(F("AT+GATTADDSERVICE=UUID=0x0001"), &customServiceID); 
+    if (! success){
+      error(F("Could not add CUSTOM service"));
+    }
     /* Add CUSTOM TX characteristic */
     Serial.println(F("Adding the CUSTOM TX characteristic(UUID=0x0002): "));
     success = ble.sendCommandWithIntReply(F("AT+GATTADDCHAR=UUID=0x0002, PROPERTIES=0x02, MIN_LEN=1, VALUE=0"), &customTXCharID);
@@ -293,11 +314,8 @@ void ble_setup(){
       error(F("Could not add RX characteristic"));
     }
 
-
-
-
-
   /* Reset the device for the new service setting changes to take effect */
     ble.reset();
+    ble.verbose(false);
     Serial.println("Setup finished.");
   }
