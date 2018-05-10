@@ -14,7 +14,6 @@
 /* ...hardware SPI, using SCK/MOSI/MISO hardware SPI pins and then user selected CS/IRQ/RST */
 Adafruit_BluefruitLE_SPI ble(BLUEFRUIT_SPI_CS, BLUEFRUIT_SPI_IRQ, BLUEFRUIT_SPI_RST);
 
-
 SimpleTimer timer; //Timer para ejecutar funciones en cierto tiempo
 
 /* The service information */
@@ -87,25 +86,20 @@ void setup()
   //ble.print(F("AT+GATTCHAR=6,")); ble.println(measurementCharID);
   }
 
-  bool gattUpdate(){
+  int gattUpdate(){
     bool chance;
     int32_t response;
     chance = ble.sendCommandWithIntReply(F("AT+GATTCHAR=6"), &response); 
     if (! chance){
       error(F("Try again."));
     }
-    if(response == 10){
-      return true; 
-    }
-    return false;
+    return response;
   }
 
   void requestEvent(){
     char data[2];
-    if(gattUpdate()){
-      data[0] = 1;
-      data[1] = 2;
-    }
+    data[0] = 1;
+    data[1] = gattUpdate();
     Wire.write(data,2);
   }
 
@@ -232,7 +226,7 @@ void ble_setup(){
   //ble.update(250);
 
   /* Change the device name to make it easier to find */
-    if (! ble.sendCommandCheckOK(F("AT+GAPDEVNAME=Pixky_SS18")) ) {
+    if (! ble.sendCommandCheckOK(F("AT+GAPDEVNAME=Pixky Health")) ) {
       error(F("Could not set device name?"));
     }
 
